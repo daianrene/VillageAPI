@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using VillageAPI;
 using VillageAPI.DataAccess;
+using VillageAPI.Repository;
+using VillageAPI.Repository.IRepository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,9 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(conn
 
 // Add AutoMapper ID
 builder.Services.AddAutoMapper(typeof(MappingConfig));
+
+// Add Repo injection;
+builder.Services.AddScoped<IVillageRepository, VillageRepository>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

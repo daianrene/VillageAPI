@@ -1,9 +1,8 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using VillageAPI.DataAccess;
 using VillageAPI.Models;
 using VillageAPI.Models.Dto;
+using VillageAPI.Repository.IRepository;
 
 namespace VillageAPI.Controllers
 {
@@ -11,19 +10,19 @@ namespace VillageAPI.Controllers
     [ApiController]
     public class VillageController : ControllerBase
     {
-        private readonly AppDbContext _dbContext;
         private readonly IMapper _mapper;
-        public VillageController(AppDbContext dbContext, IMapper mapper)
+        private readonly IVillageRepository _villageRepo;
+        public VillageController(IMapper mapper, IVillageRepository villageRepo)
         {
-            _dbContext = dbContext;
             _mapper = mapper;
+            _villageRepo = villageRepo;
         }
 
         [HttpGet]
         [ProducesResponseType(200)]
         public async Task<ActionResult<IEnumerable<VillageDto>>> GetAll()
         {
-            var villageList = await _dbContext.Villages.ToListAsync();
+            var villageList = await _villageRepo.GetAllAsync();
             var villageListDTO = _mapper.Map<IEnumerable<VillageDto>>(villageList);
 
             return Ok(villageListDTO);
@@ -36,7 +35,7 @@ namespace VillageAPI.Controllers
         {
             if (id < 1) return BadRequest();
 
-            var Villa = await _dbContext.Villages.FirstOrDefaultAsync(x => x.Id == id);
+            var Villa = await _villageRepo.GetAsync(x => x.Id == id);
             if (Villa == null) return NotFound();
             var VillaDTO = _mapper.Map<VillageDto>(Villa);
 
@@ -56,8 +55,7 @@ namespace VillageAPI.Controllers
 
             Village newVillage = _mapper.Map<Village>(newVillageDTO);
 
-            await _dbContext.AddAsync(newVillage);
-            await _dbContext.SaveChangesAsync();
+            await _villageRepo.CreateAsync(newVillage);
             return NoContent();
             // return CreatedAtAction(nameof(GetVillage), new { id = newVillage.Id }, newVillage);
         }
@@ -67,13 +65,11 @@ namespace VillageAPI.Controllers
         {
             if (id != villageUpdDTO.Id || !ModelState.IsValid) return BadRequest(ModelState);
 
-            var result = await _dbContext.Villages.FirstOrDefaultAsync(x => x.Id == id);
+            var result = await _villageRepo.GetAsync(x => x.Id == id);
             if (result == null) return NotFound();
 
             _mapper.Map(villageUpdDTO, result);
-            result.UpdatedDate = DateTime.Now;
-
-            await _dbContext.SaveChangesAsync();
+            await _villageRepo.UpdateAsync(result);
 
             return NoContent();
 
@@ -85,11 +81,10 @@ namespace VillageAPI.Controllers
         public async Task<IActionResult> Delete(int id)
         {
 
-            var village = await _dbContext.Villages.FirstOrDefaultAsync(v => v.Id == id);
+            var village = await _villageRepo.GetAsync(v => v.Id == id);
             if (village == null) return NotFound();
 
-            _dbContext.Villages.Remove(village);
-            await _dbContext.SaveChangesAsync();
+            await _villageRepo.RemoveAsync(village);
             return NoContent();
         }
     }
