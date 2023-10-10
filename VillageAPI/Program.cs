@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using VillageAPI;
 using VillageAPI.DataAccess;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,8 +8,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+// Add Bd Connection
 var connectionString = builder.Configuration.GetConnectionString("VillageConnection");
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
+
+// Add AutoMapper ID
+builder.Services.AddAutoMapper(typeof(MappingConfig));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
